@@ -16,32 +16,28 @@
 #include <resolv.h>
 #define ROOT_DIR "/"
 
-#include <>
 
-int Daemon(void){
-
-}
+int Daemon(void)
+{ }
 
 int main(void){
 
 	pid_t pid = fork();
-	if(pid < 0){
+	
+    if(pid < 0){
 		fprintf(stderr, "[error] failed to create process\n");
 		exit(1);
-	}	
-    else if(pid != 0){
+	} else if(pid != 0){
 		fprintf(stderr, "[error] process already created\n");
 		exit(2);
     }
 	if(pid == 0){
 		chdir(ROOT_DIR);
 		pid_t new_pid_session = setsid();
-		
-        close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		close(STDERR_FILENO);
+		close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+   		close(STDERR_FILENO);
         Daemon();
 	}
-
 	return 0;
 }
