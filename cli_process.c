@@ -8,7 +8,7 @@ extern int optind;
 
 int main(int argc, char ** argv){
     const struct option daemon_opts[] = {
-	    { "start", optional_argument, NULL, 'r'},
+	    {"start", optional_argument, NULL, 'r'},
    	    {"stop", no_argument, NULL, 'p'},
 	    {"show", required_argument, NULL, 'w'},
 	    {"select", required_argument, NULL, 's'},
