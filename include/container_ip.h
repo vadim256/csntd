@@ -1,7 +1,7 @@
 
 #ifndef LIST_H
 #define LIST_H
-
+#include <stdio.h>
 typedef struct data {
     char address_ip[256];
     int count_ip;
@@ -14,9 +14,9 @@ typedef struct list_ip{
 
 ListIP * Create(const Data);
 
-void Print(const ListIP *);
+void Print(const ListIP *, FILE * fp);
 
-const ListIP * Find(const ListIP *, const Data);
+ListIP * Find(ListIP *, const Data);
 
 void AddList(ListIP **, const Data);
 

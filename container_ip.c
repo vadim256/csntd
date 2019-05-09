@@ -1,18 +1,18 @@
 #include "include/container_ip.h"
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
-void Print(const ListIP * u){
-    ListIP * p = u;
+
+void Print(const ListIP * u, FILE * fp){
+    const ListIP * p = u;
     while(p != NULL){
-        printf("%s : %d\n", p->d.address_ip, p->d.count_ip);
+        fprintf(fp,"%s : %d\n", p->d.address_ip, p->d.count_ip);
         p = p->next;
     }
 }
 
-const ListIP * Find(const ListIP * u, const Data x){
-    const ListIP * p = u;
+ListIP * Find(ListIP * u, const Data x){
+    ListIP * p = u;
     while(p != NULL){
         if(!strcmp(p->d.address_ip, x.address_ip))
             return p;

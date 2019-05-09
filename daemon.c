@@ -72,9 +72,10 @@ void ProcessPacket(u_char * arg, const struct pcap_pkthdr * header, const u_char
 		AddList(&list, data);
 	else f->d.count_ip += 1;
 
-	fprintf(logfile, "From IP: %s\t Packet number %d\n", inet_ntoa(ip->ip_src), count);
+	fprintf(logfile, "From IP:\t Packet number %d\n", /*inet_ntoa(ip->ip_src),*/ count);
 	return;
 }
+
 void IndexInterface(){
 
 	if(!logfile){
@@ -102,12 +103,14 @@ void IndexInterface(){
 			strcpy(devs[count], device->name);
 		fprintf(devices, "%s\n", devs[count]);
 	}
+
 	fclose(devices);
 }
 
 void Daemon(void){ 
 	
 	
+	logfile = fopen("/tmp/sniffer.log", "w+");
 	Data data = {"0.0.0.0", 1};
 	list = Create(data);
 	
@@ -120,8 +123,9 @@ void Daemon(void){
 		fprintf(logfile, "Couldn't open device %s : %s\n" , dfldev, errbuf);
 		exit(1);
 	}
+	Print(list, logfile);
+	fflush(logfile);
 	pcap_loop(handler, -1, ProcessPacket, 0);
-
 }
 
 int main(void){
@@ -138,7 +142,6 @@ int main(void){
 		close(STDIN_FILENO);
    		close(STDOUT_FILENO);
    		close(STDERR_FILENO);
-		logfile = fopen("/tmp/sniffer.log", "w");
   	    Daemon();
 	}
 
