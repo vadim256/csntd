@@ -1,4 +1,5 @@
 #include "include/color_output.h"
+#include "include/container_ip.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -48,11 +49,11 @@ struct sniff_ip {
 char devs[128][256];
 FILE * logfile = NULL, 
 	 * list_ip = NULL;
-	 
+ListIP *list;	 
 
 void ProcessPacket(u_char * arg, const struct pcap_pkthdr * header, const u_char * packet){
 
-	static int count = 1;                   // packet counter 
+	static int count = 0;                   // packet counter 
 	const struct sniff_ip *ip;              // The IP header 
 	int size_ip;
 	count++;
@@ -62,6 +63,15 @@ void ProcessPacket(u_char * arg, const struct pcap_pkthdr * header, const u_char
 		fprintf(logfile, "Invalid IP header length: %u bytes\n", size_ip);
 		return;
 	}
+
+	Data data;
+	strcpy(data.address_ip, inet_ntoa(ip->ip_src));
+	data.count_ip = 1;
+	ListIP * f = Find(list, data);
+	if(f == NULL)
+		AddList(&list, data);
+	else f->d.count_ip += 1;
+
 	fprintf(logfile, "From IP: %s\t Packet number %d\n", inet_ntoa(ip->ip_src), count);
 	return;
 }
@@ -96,12 +106,15 @@ void IndexInterface(){
 }
 
 void Daemon(void){ 
-
-	IndexInterface();
 	
+	
+	Data data = {"0.0.0.0", 1};
+	list = Create(data);
+	
+	IndexInterface();
 	char * dfldev = devs[0];
 	char errbuf[PCAP_ERRBUF_SIZE];
-	pcap_t * handler = pcap_open_live(dfldev, BUFSIZ, 1, 1000, errbuf);
+	pcap_t * handler = pcap_open_live(dfldev, BUFSIZ, 1, 10000, errbuf);
 	
 	if(!handler){
 		fprintf(logfile, "Couldn't open device %s : %s\n" , dfldev, errbuf);

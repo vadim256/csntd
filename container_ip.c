@@ -6,35 +6,32 @@
 void Print(const ListIP * u){
     ListIP * p = u;
     while(p != NULL){
-        printf("IP:%s : %d", p->d.address_ip, p->d.count_ip);
+        printf("%s : %d\n", p->d.address_ip, p->d.count_ip);
         p = p->next;
     }
 }
 
-const ListIP * Find(const ListIP * u, const Data * x){
+const ListIP * Find(const ListIP * u, const Data x){
     const ListIP * p = u;
     while(p != NULL){
-        if(!strcmp(p->d.address_ip, x->address_ip))
+        if(!strcmp(p->d.address_ip, x.address_ip))
             return p;
         p = p->next;
     }
     return NULL;
 }
 
-void AddBeg(ListIP ** u, const Data * x){
+void AddList(ListIP ** u, const Data x){
     ListIP * p = (ListIP*)malloc(sizeof(ListIP));
     if(!p)
         return;
-    p->d.address_ip = (char *) malloc(sizeof(char)*strlen(x->address_ip)+1);
-    if(!(p->d.address_ip))
-        return;
-    strcpy(p->d.address_ip, x->address_ip);
-    p->d.count_ip = x->count_ip;
+    strcpy(p->d.address_ip, x.address_ip);
+    p->d.count_ip = x.count_ip;
     p->next = *u;
     *u = p;
 }
-
-void Insert(ListIP ** u, const Data * x){
+/*
+void Insert(ListIP ** u, const Data  x){
     ListIP *p = (ListIP*) malloc(sizeof(ListIP));
     if(!p)
         return;
@@ -95,7 +92,7 @@ void Delete(ListIP ** u, const Data * x){
         t1 = t1->next;
    }
 }
-
+*/
 void Clear(ListIP ** u){
 
     if(*u == 0) return;
@@ -104,8 +101,16 @@ void Clear(ListIP ** u){
     while(p) {
       t = p;
       p = p->next;
-      free(t->d.address_ip);
       free(t);
    }
    *u = NULL;
+}
+
+ListIP * Create(const Data d){
+	ListIP *list = (ListIP*)malloc(sizeof(ListIP));
+    if(!list) return NULL;
+    list->d = d;
+	list->next = NULL;
+	return list;
+
 }

@@ -1,23 +1,25 @@
 
-#ifndef CONTAINER_IP_H_
-#define CONTAINER_IP_H_
+#ifndef LIST_H
+#define LIST_H
 
 typedef struct data {
-    char * address_ip;
+    char address_ip[256];
     int count_ip;
 } Data;
 
-typedef struct linked_list_ip{
+typedef struct list_ip{
     Data d;
-    struct linked_list_ip * next;
+    struct list_ip * next;
 } ListIP;
 
-ListIP * Init(void);
+ListIP * Create(const Data);
+
 void Print(const ListIP *);
-const ListIP * Find(const ListIP *, const Data *);
-void AddBeg(ListIP **, const Data*);
-void Insert(ListIP**, const Data*);
-void Delete(ListIP**, const Data*);
+
+const ListIP * Find(const ListIP *, const Data);
+
+void AddList(ListIP **, const Data);
+
 void Clear(ListIP **);
 
 #endif

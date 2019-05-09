@@ -7,7 +7,7 @@ FLAGS :=  -Wall
 DAEMON := csntd
 PROCESS := cli_control
 
-${DAEMON}: ../daemon.c ${PROCESS}
+${DAEMON}: ../daemon.c ${PROCESS} ../container_ip.
 	${CC} ${FLAGS} ../daemon.c -o ./bin/${DAEMON} -lpcap
 
 ${PROCESS}: ../cli_process.c
