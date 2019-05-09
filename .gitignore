@@ -2,3 +2,5 @@ build/.Makefile.sw*
 /build/bin
 /.vscode
 .gitignore.swp
+*.[aoso]
+*.out
