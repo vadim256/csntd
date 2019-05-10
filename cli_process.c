@@ -43,7 +43,7 @@ int main(int argc, char ** argv){
 }
 
 int FindPidDaemon(void) {
-		FILE * tmp = fopen("/home/ameliepulen/sniffer/build/pid_daemon.txt", "r+");
+		FILE * tmp = fopen("/.pid_daemon.txt", "r+");
 		if(tmp == NULL){
 			perror("fopen");
 			return -1;
@@ -74,11 +74,56 @@ void StartDaemon(void) {
 }
 
 void StatDaemon(const char * device) {
+	int pid = FindPidDaemon();
+	if(pid > 0)
+		kill(pid, SIGHUP);
+	else fprintf(stderr, "Don`t find pid daemon\n");
 
+	sleep(1);
+	FILE * stat = fopen("/.stat.txt", "r+");
+	if(stat == NULL){
+		perror("fopen");
+		return;
+	}
+	char buffer[1024];
+	int i = 0;
+	while(fgets(buffer, 1023, stat) != NULL){
+		if(i == 1)
+			fprintf(stdout, AC_RED "IP Address\t  Count Packets\n" AC_RESET);
+		fprintf(stdout, AC_YELLOW"%s", buffer);
+		++i;
+	}
+	fprintf(stdout, "" AC_RESET);
+	fclose(stat);
 }
 
 void ShowPacketsIPDaemon(const char * ip) {
+	if(ip == NULL){
+		fprintf(stderr, AC_RED"IP address not entered\n" AC_RESET);		
+		return;
+	}
+	int pid = FindPidDaemon();
+	if(pid > 0)
+		kill(pid, SIGHUP);
+	else fprintf(stderr, "Don`t find pid daemon\n");
 
+	sleep(1);
+	FILE * stat = fopen("/.stat.txt", "r+");
+	if(stat == NULL){
+		perror("fopen");
+		return;
+	}
+	char buffer[1024];
+	int i = 0;
+	while(fgets(buffer, 1023, stat) != NULL){
+		if(i == 1)
+			fprintf(stdout, AC_RED "IP Address\t  Count Packets\n" AC_RESET);
+		if(strstr(buffer, ip) != NULL)
+			fprintf(stdout, AC_BLUE"%s", buffer);
+		++i;
+	}
+	fprintf(stdout, "" AC_RESET);
+	fclose(stat);
 }
 
 void SelectDeviceDaemon(const char * device) {
