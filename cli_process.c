@@ -7,38 +7,12 @@
 #include <sys/types.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 extern char * optarg;
 extern int optind;
 
-void RunDaemon(const char * name_device){
-	if(!name_device)
-		name_device = "eth0";
-	int exit_status;
-	pid_t pid = fork();
-	if(pid == -1){
-		perror("fork");
-		exit(1);
-	}
-	if(pid == 0){
-		char *curpwd = (char *)getenv("PWD");
-		char bufpwd[512];
-		sprintf(bufpwd, "%s/csntd", curpwd);
-		execl(bufpwd, "csntd", name_device, "NULL");
-		fprintf(stderr, "Exec error\n");
-		exit(2);
-
-	} else {
-		int childpid = wait(&exit_status);
-		if (WIFEXITED (exit_status)) {
-			printf("Process with PID=%d "
-					"has exited with code=%d\n", childpid, 
-					WEXITSTATUS (exit_status));
-		}
-		return;
-	}
-
-}
 
 int main(int argc, char ** argv){
     const struct option daemon_opts[] = {
@@ -51,12 +25,9 @@ int main(int argc, char ** argv){
 	    {NULL, 0, NULL, 0}
     };
 	int current_option;
-	char * name_device = 0;
-    while((current_option = getopt_long(argc, argv, "r:pw:s:t:h", daemon_opts, NULL)) != -1){
+	while((current_option = getopt_long(argc, argv, "r:pw:s:t:h", daemon_opts, NULL)) != -1){
 		switch(current_option){
-			case 'r':
-				RunDaemon(optarg);
-			return 0;				
+			case 'r':					
 			case 'p':
 			case 'w':
 			case 's':
@@ -73,3 +44,4 @@ int main(int argc, char ** argv){
 
     return 0;
 }
+

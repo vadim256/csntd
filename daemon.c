@@ -1,82 +1,22 @@
 #include "include/color_output.h"
 #include "include/container_ip.h"
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/wait.h>
-
-#include <pcap.h>
-#include <netinet/in.h>
-#include <netinet/if_ether.h>
-
-#include <ctype.h>
-#include <errno.h>
-#include <arpa/inet.h>
-
-#define ROOT_DIR "/"
-
-//ethernet headers are always exactly 14 bytes [1] 
-#define SIZE_ETHERNET 14
-
-// IP header
-struct sniff_ip {
-        u_char  ip_vhl;                 /* version << 4 | header length >> 2 */
-        u_char  ip_tos;                 /* type of service */
-        u_short ip_len;                 /* total length */
-        u_short ip_id;                  /* identification */
-        u_short ip_off;                 /* fragment offset field */
-        #define IP_RF 0x8000            /* reserved fragment flag */
-        #define IP_DF 0x4000            /* dont fragment flag */
-        #define IP_MF 0x2000            /* more fragments flag */
-        #define IP_OFFMASK 0x1fff       /* mask for fragmenting bits */
-        u_char  ip_ttl;                 /* time to live */
-        u_char  ip_p;                   /* protocol */
-        u_short ip_sum;                 /* checksum */
-        struct  in_addr ip_src,ip_dst;  /* source and dest address */
-};
-#define IP_HL(ip)               (((ip)->ip_vhl) & 0x0f)
-#define IP_V(ip)                (((ip)->ip_vhl) >> 4)
+#include "include/daemon.h"
 
 
-char devs[128][256];
+char devs[N][M];
 FILE * logfile = NULL, 
 	 * list_ip = NULL;
 ListIP *list;	 
 
-void ProcessPacket(u_char * arg, const struct pcap_pkthdr * header, const u_char * packet){
 
-	static int count = 0;                   // packet counter 
-	const struct sniff_ip *ip;              // The IP header 
-	int size_ip;
-	count++;
-	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
-	size_ip = IP_HL(ip)*4;
-	if (size_ip < 20) {
-		fprintf(logfile, "Invalid IP header length: %u bytes\n", size_ip);
-		return;
-	}
+FILE * OpenPwdFile(const char * name){
+	char *pwd = getenv("PWD");
+	char buffer[1024];
+	sprintf(buffer, "%s/%s", pwd, name);
 
-	Data data;
-	strcpy(data.address_ip, inet_ntoa(ip->ip_src));
-	data.count_ip = 1;
-	ListIP * f = Find(list, data);
-	if(f == NULL)
-		AddList(&list, data);
-	else f->d.count_ip += 1;
-
-	fprintf(logfile, "From IP:\t Packet number %d\n", /*inet_ntoa(ip->ip_src),*/ count);
-	return;
+	return fopen(buffer, "w+");
 }
-
-void IndexInterface(){
+void CountDevices(){
 
 	if(!logfile){
 		exit(1);
@@ -92,29 +32,30 @@ void IndexInterface(){
 	fprintf(logfile, "\nAvailable Devices are :\n");
 	pcap_if_t * device = NULL;
 	int count = 0;
-	FILE * devices = fopen("/tmp/listdevices", "w");
+	FILE * devices = fopen("/home/ameliepulen/sniffer/build/listdevices", "w+");
+	int flag = 1;
 	if(!devices){
 		fprintf(logfile, "Don`t open file listdevices\n");
-		exit(1);
+		flag = 0;
 	}
 	for(device = alldevsp; device; device = device->next, ++count){
 		fprintf(logfile, "[%d] %s - %s\n" , count , device->name , device->description);
-		if(device->name != NULL && count < 128)
+		if(device->name != NULL && count < N)
 			strcpy(devs[count], device->name);
-		fprintf(devices, "%s\n", devs[count]);
+		if(flag) fprintf(devices, "%s\n", devs[count]);
 	}
 
-	fclose(devices);
+	if(flag) fclose(devices);
 }
 
 void Daemon(void){ 
 	
-	
-	logfile = fopen("/tmp/sniffer.log", "w+");
+	logfile = fopen("/home/ameliepulen/sniffer/build/sniffer.log", "w+");
+	//logfile = OpenPwdFile("sniffer.log");
 	Data data = {"0.0.0.0", 1};
 	list = Create(data);
-	
-	IndexInterface();
+	CountDevices();
+
 	char * dfldev = devs[0];
 	char errbuf[PCAP_ERRBUF_SIZE];
 	pcap_t * handler = pcap_open_live(dfldev, BUFSIZ, 1, 10000, errbuf);
@@ -123,9 +64,37 @@ void Daemon(void){
 		fprintf(logfile, "Couldn't open device %s : %s\n" , dfldev, errbuf);
 		exit(1);
 	}
-	Print(list, logfile);
-	fflush(logfile);
-	pcap_loop(handler, -1, ProcessPacket, 0);
+
+	u_char * packet = 0;
+	struct pcap_pkthdr header;
+	for(;;){
+
+		packet = (u_char*) pcap_next(handler, &header);		
+		if(!packet) continue;
+				
+		static int count = 0;                   // packet counter 
+		const struct sniff_ip *ip;              // The IP header 
+		int size_ip;
+		count++;
+		ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
+		size_ip = IP_HL(ip)*4;
+		if (size_ip < 20) {
+			fprintf(logfile, "Invalid IP header length: %u bytes\n", size_ip);
+			continue;
+		}
+	
+		Data data;
+		strcpy(data.address_ip, inet_ntoa(ip->ip_src));
+		data.count_ip = 1;
+		ListIP * f = Find(list, data);
+		if(f == NULL)
+		AddList(&list, data);
+		else f->d.count_ip += 1;
+
+		Print(list, logfile);
+		//fflush(logfile);
+		//fprintf(logfile, "From IP:\t Packet number %d\n", inet_ntoa(ip->ip_src), count);
+	}				
 }
 
 int main(void){
@@ -136,6 +105,7 @@ int main(void){
 		fprintf(stderr, AC_RED"[error] failed to create process\n"AC_RESET);
 		exit(1);
 	}
+
 	if(pid == 0){
 		chdir(ROOT_DIR);
 		setsid();
