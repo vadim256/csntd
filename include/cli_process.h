@@ -21,8 +21,8 @@ static const char * const help_str =
           "--show, -w [ip]            count print number of packets received from ip address\n"
           "--select, -s [iface]       select interface for sniffing eth0, wlan0, ethN, wlanN...\n"
           "--stat, -t [iface]         show all collected statistics for particular interface,\n"
-          "                       	   if iface omitted - for all interfaces\n"
-          "--help, -h             	   show usage information\n";
+          "                           if iface omitted - for all interfaces\n"
+          "--help, -h                 show usage information\n";
  
 
 int FindPidDaemon(void);
