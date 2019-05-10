@@ -1,5 +1,5 @@
 
-.PHONY: clean all 
+.PHONY: all 
 all: csntd
 
 CC := gcc
@@ -12,7 +12,3 @@ ${DAEMON}: ../daemon.c ${PROCESS} ../container_ip.c
 
 ${PROCESS}: ../cli_process.c
 	${CC} ${FLAGS} ../cli_process.c -o ${PROCESS}
-
-clear: 
-	rm -rf /build/bin/*.*
-
