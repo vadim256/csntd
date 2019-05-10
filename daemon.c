@@ -8,6 +8,20 @@ FILE * logfile = NULL,
 	 * list_ip = NULL;
 ListIP *list;	 
 
+static int status = 0;
+void handler_stop(int num){	
+	status = 1;
+	fprintf(logfile, "\nSTOP\n");
+	fflush(logfile);
+}
+void handler_start(int num){
+	status = 0;
+	fprintf(logfile, "\nSTART\n");
+	fflush(logfile);
+}
+void empty_loop(){
+	while(status) ;
+}
 
 FILE * OpenPwdFile(const char * name){
 	char *pwd = getenv("PWD");
@@ -16,6 +30,7 @@ FILE * OpenPwdFile(const char * name){
 
 	return fopen(buffer, "w+");
 }
+
 void CountDevices(){
 
 	if(!logfile){
@@ -48,8 +63,19 @@ void CountDevices(){
 	if(flag) fclose(devices);
 }
 
+void SavePid(){
+	static int once_file = 0;
+	FILE * tmp = fopen("/home/ameliepulen/sniffer/build/pid_daemon.txt", "w+");
+	if(once_file == 0)
+		fprintf(tmp,"%d",getpid());
+	++once_file;
+	fclose(tmp);
+}
+
 void Daemon(void){ 
-	
+	SavePid();	
+	signal(SIGUSR1, handler_stop);
+	signal(SIGUSR2, handler_start);
 	logfile = fopen("/home/ameliepulen/sniffer/build/sniffer.log", "w+");
 	//logfile = OpenPwdFile("sniffer.log");
 	Data data = {"0.0.0.0", 1};
@@ -68,7 +94,8 @@ void Daemon(void){
 	u_char * packet = 0;
 	struct pcap_pkthdr header;
 	for(;;){
-
+		
+		empty_loop();
 		packet = (u_char*) pcap_next(handler, &header);		
 		if(!packet) continue;
 				
@@ -90,8 +117,9 @@ void Daemon(void){
 		if(f == NULL)
 		AddList(&list, data);
 		else f->d.count_ip += 1;
+		
 
-		Print(list, logfile);
+		//Print(list, logfile);
 		//fflush(logfile);
 		//fprintf(logfile, "From IP:\t Packet number %d\n", inet_ntoa(ip->ip_src), count);
 	}				
