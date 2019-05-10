@@ -13,7 +13,7 @@
 extern char * optarg;
 extern int optind;
 
-const char * const help_str = 
+static const char * const help_str = 
           "Usage: cli_process [options]...\n"
           "Options: \n"
           "--start, -r                packets are being sniffed from now on from default iface(eth0)\n"
@@ -24,4 +24,13 @@ const char * const help_str =
           "                       	   if iface omitted - for all interfaces\n"
           "--help, -h             	   show usage information\n";
  
+
+int FindPidDaemon(void);
+void StopDaemon(void);
+void StartDaemon(void);
+void StatDaemon(const char *);
+void ShowPacketsIPDaemon(const char *);
+void SelectDeviceDaemon(const char *);
+void PrintOptionsInfo(void);
+
 #endif

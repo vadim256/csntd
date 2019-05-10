@@ -26,8 +26,7 @@
 #define ROOT_DIR "/"
 
 
-
-//ethernet headers are always exactly 14 bytes [1] 
+//ethernet headers are always exactly 14 bytes 
 #define SIZE_ETHERNET 14
 
 // IP header
@@ -46,14 +45,18 @@ struct sniff_ip {
         u_short ip_sum;                 /* checksum */
         struct  in_addr ip_src,ip_dst;  /* source and dest address */
 };
+
 #define IP_HL(ip)               (((ip)->ip_vhl) & 0x0f)
 #define IP_V(ip)                (((ip)->ip_vhl) >> 4)
 #define N 128
 #define M 256
 
-
 void CountDevices(void);
 void Daemon(void);
 FILE * OpenPwdFile(const char *);
+void handler_stop(int);
+void handler_start(int);
+void EmptyLoop(void);
+void SavePid(void);
 
 #endif

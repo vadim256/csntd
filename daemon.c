@@ -4,39 +4,63 @@
 
 
 char devs[N][M];
-FILE * logfile = NULL, 
-	 * list_ip = NULL;
+FILE * logfile = NULL;
 ListIP *list;	 
-
 static int status = 0;
-void handler_stop(int num){	
+
+int main(void){
+
+	pid_t pid = fork();
+
+	if(pid == -1){
+		fprintf(stderr, AC_RED"[error] failed to create process\n"AC_RESET);
+		exit(1);
+	}
+
+	if(pid == 0){
+		chdir(ROOT_DIR);
+		setsid();
+		close(STDIN_FILENO);
+   		close(STDOUT_FILENO);
+   		close(STDERR_FILENO);
+		Daemon();
+	}
+
+	return 0;
+}
+
+void handler_stop(int num) {	
 	status = 1;
 	fprintf(logfile, "\nSTOP\n");
 	fflush(logfile);
 }
-void handler_start(int num){
+
+void handler_start(int num) {
 	status = 0;
 	fprintf(logfile, "\nSTART\n");
 	fflush(logfile);
 }
-void empty_loop(){
-	while(status) ;
+
+void EmptyLoop(void) {
+	while(status)
+		;
 }
 
-FILE * OpenPwdFile(const char * name){
-	char *pwd = getenv("PWD");
+FILE * OpenPwdFile(const char * name) {
+	char *pwd = getenv("PWD"); 
 	char buffer[1024];
 	sprintf(buffer, "%s/%s", pwd, name);
 
 	return fopen(buffer, "w+");
 }
 
-void CountDevices(){
+void CountDevices() {
 
 	if(!logfile){
 		exit(1);
 	}
 	fprintf(logfile, "Finding available devices ...\n");
+
 	char errbuf[PCAP_ERRBUF_SIZE];
 	pcap_if_t * alldevsp;
 
@@ -44,15 +68,19 @@ void CountDevices(){
 		fprintf(logfile,"Error finding devices: %s\n", errbuf);
 		exit(1);
 	}
+
 	fprintf(logfile, "\nAvailable Devices are :\n");
+
 	pcap_if_t * device = NULL;
 	int count = 0;
+
 	FILE * devices = fopen("/home/ameliepulen/sniffer/build/listdevices", "w+");
 	int flag = 1;
 	if(!devices){
 		fprintf(logfile, "Don`t open file listdevices\n");
 		flag = 0;
 	}
+
 	for(device = alldevsp; device; device = device->next, ++count){
 		fprintf(logfile, "[%d] %s - %s\n" , count , device->name , device->description);
 		if(device->name != NULL && count < N)
@@ -63,7 +91,7 @@ void CountDevices(){
 	if(flag) fclose(devices);
 }
 
-void SavePid(){
+void SavePid(void) {
 	static int once_file = 0;
 	FILE * tmp = fopen("/home/ameliepulen/sniffer/build/pid_daemon.txt", "w+");
 	if(once_file == 0)
@@ -72,12 +100,12 @@ void SavePid(){
 	fclose(tmp);
 }
 
-void Daemon(void){ 
+void Daemon(void) { 
 	SavePid();	
 	signal(SIGUSR1, handler_stop);
 	signal(SIGUSR2, handler_start);
 	logfile = fopen("/home/ameliepulen/sniffer/build/sniffer.log", "w+");
-	//logfile = OpenPwdFile("sniffer.log");
+
 	Data data = {"0.0.0.0", 1};
 	list = Create(data);
 	CountDevices();
@@ -95,12 +123,12 @@ void Daemon(void){
 	struct pcap_pkthdr header;
 	for(;;){
 		
-		empty_loop();
+		EmptyLoop();
 		packet = (u_char*) pcap_next(handler, &header);		
 		if(!packet) continue;
 				
-		static int count = 0;                   // packet counter 
-		const struct sniff_ip *ip;              // The IP header 
+		static int count = 0;                   
+		const struct sniff_ip *ip;              
 		int size_ip;
 		count++;
 		ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
@@ -125,23 +153,3 @@ void Daemon(void){
 	}				
 }
 
-int main(void){
-
-	pid_t pid = fork();
-	
-	if(pid == -1){
-		fprintf(stderr, AC_RED"[error] failed to create process\n"AC_RESET);
-		exit(1);
-	}
-
-	if(pid == 0){
-		chdir(ROOT_DIR);
-		setsid();
-		close(STDIN_FILENO);
-   		close(STDOUT_FILENO);
-   		close(STDERR_FILENO);
-  	    Daemon();
-	}
-
-	return 0;
-}

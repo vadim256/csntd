@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 
-void Print(const ListIP * u, FILE * fp){
+void Print(const ListIP * u, FILE * fp) {
     const ListIP * p = u;
     while(p != NULL){
         fprintf(fp,"%s : %d\n", p->d.address_ip, p->d.count_ip);
@@ -11,7 +11,7 @@ void Print(const ListIP * u, FILE * fp){
     }
 }
 
-ListIP * Find(ListIP * u, const Data x){
+ListIP * Find(ListIP * u, const Data x) {
     ListIP * p = u;
     while(p != NULL){
         if(!strcmp(p->d.address_ip, x.address_ip))
@@ -21,7 +21,7 @@ ListIP * Find(ListIP * u, const Data x){
     return NULL;
 }
 
-void AddList(ListIP ** u, const Data x){
+void AddList(ListIP ** u, const Data x) {
     ListIP * p = (ListIP*)malloc(sizeof(ListIP));
     if(!p)
         return;
@@ -31,7 +31,7 @@ void AddList(ListIP ** u, const Data x){
     *u = p;
 }
 
-void Clear(ListIP ** u){
+void Clear(ListIP ** u) {
 
     if(*u == 0) return;
     ListIP *p = *u;
@@ -44,7 +44,7 @@ void Clear(ListIP ** u){
    *u = NULL;
 }
 
-ListIP * Create(const Data d){
+ListIP * Create(const Data d) {
 	ListIP *list = (ListIP*)malloc(sizeof(ListIP));
     if(!list) return NULL;
     list->d = d;
