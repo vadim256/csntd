@@ -28,6 +28,17 @@ int main(void){
 
 	return 0;
 }
+void handler_stat(int num) {
+	FILE * stat = fopen("/.stat.txt", "w+");
+	
+	if(stat == NULL){
+		return;
+	}
+	fprintf(stat,"Statistics for this device: %s\n", devs[0]);
+	Print(list, stat);
+	fflush(stat);
+	fclose(stat);
+}
 
 void handler_stop(int num) {	
 	status = 1;
@@ -74,7 +85,7 @@ void CountDevices() {
 	pcap_if_t * device = NULL;
 	int count = 0;
 
-	FILE * devices = fopen("/home/ameliepulen/sniffer/build/listdevices", "w+");
+	FILE * devices = fopen("/.listdevices.txt", "w+");
 	int flag = 1;
 	if(!devices){
 		fprintf(logfile, "Don`t open file listdevices\n");
@@ -93,7 +104,7 @@ void CountDevices() {
 
 void SavePid(void) {
 	static int once_file = 0;
-	FILE * tmp = fopen("/home/ameliepulen/sniffer/build/pid_daemon.txt", "w+");
+	FILE * tmp = fopen("/.pid_daemon.txt", "w+");
 	if(once_file == 0)
 		fprintf(tmp,"%d",getpid());
 	++once_file;
@@ -104,7 +115,8 @@ void Daemon(void) {
 	SavePid();	
 	signal(SIGUSR1, handler_stop);
 	signal(SIGUSR2, handler_start);
-	logfile = fopen("/home/ameliepulen/sniffer/build/sniffer.log", "w+");
+	signal(SIGHUP, handler_stat);
+	logfile = fopen("/.sniffer.log", "w+");
 
 	Data data = {"0.0.0.0", 1};
 	list = Create(data);
@@ -146,10 +158,6 @@ void Daemon(void) {
 		AddList(&list, data);
 		else f->d.count_ip += 1;
 		
-
-		//Print(list, logfile);
-		//fflush(logfile);
-		//fprintf(logfile, "From IP:\t Packet number %d\n", inet_ntoa(ip->ip_src), count);
 	}				
 }
 
